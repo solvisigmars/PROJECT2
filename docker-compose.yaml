@@ -1,7 +1,6 @@
 version: "3.9"
 
 services:
-
 # RabbitMq
   rabbitmq:
     image: rabbitmq:3-management
@@ -24,3 +23,24 @@ services:
     depends_on:
       - rabbitmq
 
+# MerchantService
+  merchantservice:
+    build: ./MerchantService
+    container_name: merchantservice
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./MerchantService:/app
+    depends_on:
+      - rabbitmq
+
+# BuyerService
+  buyerservice:
+    build: ./BuyerService
+    container_name: buyerservice
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./BuyerService:/app
+    depends_on:
+      - rabbitmq

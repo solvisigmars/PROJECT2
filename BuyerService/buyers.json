@@ -1,0 +1,11 @@
+{
+    "buyers": [
+        {
+            "id": 1,
+            "name": "Jane Smith",
+            "ssn": "5000000000",
+            "email": "jane@example.com",
+            "phoneNumber": "7654321"
+        }
+    ]
+}
