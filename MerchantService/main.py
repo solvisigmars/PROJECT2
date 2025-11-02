@@ -45,5 +45,7 @@ def get_merchant(merchant_id: int):
         data = json.load(f)
         for merchant in data["merchants"]:
             if merchant["id"] == merchant_id:
-                return merchant
+                merchant_copy = merchant.copy()
+                del merchant_copy["id"]
+                return merchant_copy
         raise HTTPException(status_code=404, detail="Merchant does not exist")

@@ -99,5 +99,7 @@ def get_order(order_id: int):
         data = json.load(f)
         for order in data["orders"]:
             if order["id"] == order_id:
-                return order
+                order_copy = order.copy()
+                del order_copy["id"]
+                return order_copy
         raise HTTPException(status_code=404, detail="Order does not exist")
