@@ -37,9 +37,9 @@ init_orders_file()
 def publish_order_event(order):
     connection = pika.BlockingConnection(pika.ConnectionParameters(RABBITMQ_HOST))
     channel = connection.channel()
-    channel.queue_declare(queue=QUEUE_NAME)
+    channel.queue_declare(queue=QUEUE_NAME) 
     channel.basic_publish(
-        exchange="",
+        exchange="", 
         routing_key=QUEUE_NAME,
         body=json.dumps(order)
     )
