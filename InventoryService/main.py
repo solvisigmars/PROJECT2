@@ -13,7 +13,7 @@ PAYMENT_SUCCESS_QUEUE = "payment_success"
 PAYMENT_FAILURE_QUEUE = "payment_failure"
 
 class ProductRequest(BaseModel):
-    merchant_id: str
+    merchant_id: int
     product_name: str
     price: float
     quantity: int
