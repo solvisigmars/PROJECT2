@@ -8,7 +8,7 @@ import pika
 
 app = FastAPI(title="OrderService")
 
-ORDERS_FILE = Path("/app/orders.json")
+ORDERS_FILE = Path("/app/order_data/orders.json")
 RABBITMQ_HOST = "rabbitmq"
 QUEUE_NAME = "order_created"
 
@@ -27,6 +27,7 @@ class OrderRequest(BaseModel):
     discount: float = 0.0
 
 def init_orders_file():
+    ORDERS_FILE.parent.mkdir(parents=True, exist_ok=True)
     if not ORDERS_FILE.exists():
         with open(ORDERS_FILE, "w") as f:
             json.dump({"orders": []}, f)
@@ -69,7 +70,13 @@ def create_order(order: OrderRequest):
     if not merchant_data["allowsDiscount"] and order.discount != 0:
         raise HTTPException(status_code=400, detail="Merchant does not allow discount")
     
-    price = product_data["price"] * (1 - order.discount)
+    reserve_response = requests.post(f"http://inventoryservice:8003/products/{order.productId}/reserve",json={"amount": 1},timeout=3)
+    if reserve_response.status_code != 200:
+        raise HTTPException(status_code=400, detail="Failed to reserve product")
+
+    
+    base_price = product_data["price"]
+    price = base_price * (1 - order.discount)
 
     card_number = order.creditCard.cardNumber
     masked_card = "*" * (len(card_number)- 4) + card_number[-4:]
@@ -77,6 +84,22 @@ def create_order(order: OrderRequest):
     with open(ORDERS_FILE, "r+") as f:
         data = json.load(f)
         new_id = len(data["orders"]) + 1
+
+        payment_event = {
+            "orderId": new_id,
+            "productId": order.productId,
+            "merchantId": order.merchantId,
+            "buyerId": order.buyerId,
+            "creditCard": {
+                "cardNumber": order.creditCard.cardNumber,
+                "expirationMonth": order.creditCard.expirationMonth,
+                "expirationYear": order.creditCard.expirationYear,
+                "cvc": order.creditCard.cvc
+            },
+            "price": base_price,
+            "discount": order.discount
+        }
+
         new_order = {
             "id": new_id,
             "productId": order.productId,
@@ -89,7 +112,8 @@ def create_order(order: OrderRequest):
         f.seek(0)
         json.dump(data, f, indent=4)
 
-    publish_order_event(new_order)
+
+    publish_order_event(payment_event)  
 
     return {"orderId": new_id}
 

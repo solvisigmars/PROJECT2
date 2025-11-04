@@ -5,7 +5,7 @@ from pathlib import Path
 
 app = FastAPI(title="MerchantService")
 
-MERCHANT_FILE = Path("/app/merchants.json")
+MERCHANT_FILE = Path("/app/merchant_data/merchants.json")
 
 class MerchantRequest(BaseModel):
     name: str
@@ -15,6 +15,7 @@ class MerchantRequest(BaseModel):
     allows_discount: bool
 
 def init_merchant_file():
+    MERCHANT_FILE.parent.mkdir(parents=True, exist_ok=True)
     if not MERCHANT_FILE.exists():
         with open(MERCHANT_FILE, "w") as f:
             json.dump({"merchants": []}, f)

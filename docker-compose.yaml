@@ -19,7 +19,7 @@ services:
     ports:
       - "8000:8000"
     volumes: 
-      - ./OrderService:/app
+      - order-storage:/app/order_data
     depends_on:
       - rabbitmq
 
@@ -30,7 +30,7 @@ services:
     ports:
       - "8001:8001"
     volumes:
-      - ./MerchantService:/app
+      - merchant-storage:/app/merchant_data
     depends_on:
       - rabbitmq
 
@@ -41,6 +41,23 @@ services:
     ports:
       - "8002:8002"
     volumes:
-      - ./BuyerService:/app
+      - buyer-storage:/app/buyer_data
     depends_on:
       - rabbitmq
+
+# InventoryService
+  inventoryservice:
+    build: ./InventoryService
+    container_name: inventoryservice
+    ports:
+      - "8003:8003"
+    volumes:
+      - inventory-storage:/app/inventory_data
+    depends_on:
+      - rabbitmq
+
+volumes:
+  order-storage:
+  merchant-storage:
+  buyer-storage:
+  inventory-storage:

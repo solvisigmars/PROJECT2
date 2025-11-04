@@ -5,7 +5,7 @@ from pathlib import Path
 
 app = FastAPI(title="BuyerService")
 
-BuyerFile = Path("/app/buyers.json")
+BUYER_FILE = Path("/app/buyer_data/buyers.json")
 
 class BuyerRequest(BaseModel):
     name: str
@@ -14,8 +14,9 @@ class BuyerRequest(BaseModel):
     phone_number: str
 
 def init_buyer_file():
-    if not BuyerFile.exists():
-        with open(BuyerFile, "w") as f:
+    BUYER_FILE.parent.mkdir(parents=True, exist_ok=True)
+    if not BUYER_FILE.exists():
+        with open(BUYER_FILE, "w") as f:
             json.dump({"buyers": []}, f)
 
 
@@ -23,7 +24,7 @@ init_buyer_file()
 
 @app.post("/buyers", status_code=201)
 def create_buyer(buyer: BuyerRequest):
-    with open(BuyerFile, "r+") as f:
+    with open(BUYER_FILE, "r+") as f:
         data = json.load(f)
         new_id = len(data["buyers"]) + 1
         new_buyer = {
@@ -40,7 +41,7 @@ def create_buyer(buyer: BuyerRequest):
 
 @app.get("/buyers/{buyer_id}", status_code=200)
 def get_buyer(buyer_id: int):
-    with open(BuyerFile, "r") as f:
+    with open(BUYER_FILE, "r") as f:
         data = json.load(f)
         for buyer in data ["buyers"]:
             if buyer["id"] == buyer_id:
