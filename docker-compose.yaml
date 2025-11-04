@@ -65,7 +65,7 @@ services:
     volumes:
       - payment-storage:/app/payment_data
 
-  # EmailService (this will be scaled)
+  # EmailService 
   emailservice:
     build: ./EmailService
     depends_on:

@@ -87,7 +87,7 @@ def consume_events():
     # Bind to relevant events
     channel.queue_bind(queue="email.q", exchange=EXCHANGE, routing_key="order.created")
     channel.queue_bind(queue="email.q", exchange=EXCHANGE, routing_key="payment.success")
-    channel.queue_bind(queue="email.q", exchange=EXCHANGE, routing_key="payment.failure")
+    channel.queue_bind(queue="email.q", exchange=EXCHANGE, routing_key="payment.failed")
 
     channel.basic_consume(queue="email.q", on_message_callback=callback)
 
