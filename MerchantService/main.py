@@ -11,8 +11,8 @@ class MerchantRequest(BaseModel):
     name: str
     ssn: str
     email: str
-    phone_number: str
-    allows_discount: bool
+    phoneNumber: str
+    allowsDiscount: bool
 
 def init_merchant_file():
     MERCHANT_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -32,8 +32,8 @@ def create_merchant(merchant: MerchantRequest):
             "name": merchant.name,
             "ssn": merchant.ssn,
             "email": merchant.email,
-            "phoneNumber": merchant.phone_number,
-            "allowsDiscount": merchant.allows_discount
+            "phoneNumber": merchant.phoneNumber,
+            "allowsDiscount": merchant.allowsDiscount
         }
         data["merchants"].append(new_merchant)
         f.seek(0)

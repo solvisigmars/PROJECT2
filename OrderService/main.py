@@ -11,6 +11,7 @@ app = FastAPI(title="OrderService")
 ORDERS_FILE = Path("/app/order_data/orders.json")
 RABBITMQ_HOST = "rabbitmq"
 QUEUE_NAME = "order_created"
+EXCHANGE = "events"
 
 
 class PaymentDetails(BaseModel):
@@ -37,10 +38,10 @@ init_orders_file()
 def publish_order_event(order):
     connection = pika.BlockingConnection(pika.ConnectionParameters(RABBITMQ_HOST))
     channel = connection.channel()
-    channel.queue_declare(queue=QUEUE_NAME)
+    channel.exchange_declare(exchange=EXCHANGE, exchange_type="topic", durable=True) 
     channel.basic_publish(
-        exchange="",
-        routing_key=QUEUE_NAME,
+        exchange=EXCHANGE, 
+        routing_key="order.created",
         body=json.dumps(order)
     )
     connection.close()
@@ -57,6 +58,7 @@ def create_order(order: OrderRequest):
     buyer = requests.get(f"http://buyerservice:8002/buyers/{order.buyerId}", timeout = 3)
     if buyer.status_code != 200:
         raise HTTPException(status_code=400, detail="Buyer does not exist")
+    buyer_data = buyer.json()
     
     product = requests.get(f"http://inventoryservice:8003/products/{order.productId}", timeout=3)
     if product.status_code != 200:
@@ -86,18 +88,22 @@ def create_order(order: OrderRequest):
         new_id = len(data["orders"]) + 1
 
         payment_event = {
+            "type": "order.created",
             "orderId": new_id,
             "productId": order.productId,
             "merchantId": order.merchantId,
             "buyerId": order.buyerId,
-            "creditCard": {
+            "card": {
                 "cardNumber": order.creditCard.cardNumber,
                 "expirationMonth": order.creditCard.expirationMonth,
                 "expirationYear": order.creditCard.expirationYear,
                 "cvc": order.creditCard.cvc
             },
+            "buyerEmail": buyer_data["email"],
+            "merchantEmail": merchant_data["email"],
             "price": base_price,
-            "discount": order.discount
+            "discount": order.discount,
+            "totalPrice": price
         }
 
         new_order = {

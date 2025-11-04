@@ -56,8 +56,27 @@ services:
     depends_on:
       - rabbitmq
 
+# PaymentService
+  paymentservice:
+    build: ./PaymentService
+    container_name: paymentservice
+    depends_on:
+      - rabbitmq
+    volumes:
+      - payment-storage:/app/payment_data
+
+  # EmailService (this will be scaled)
+  emailservice:
+    build: ./EmailService
+    depends_on:
+      - rabbitmq
+    volumes:
+      - email-storage:/app/email_data
+
 volumes:
   order-storage:
   merchant-storage:
   buyer-storage:
   inventory-storage:
+  payment-storage:
+  email-storage:

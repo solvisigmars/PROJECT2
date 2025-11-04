@@ -11,7 +11,7 @@ class BuyerRequest(BaseModel):
     name: str
     ssn: str
     email: str
-    phone_number: str
+    phoneNumber: str
 
 def init_buyer_file():
     BUYER_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -32,7 +32,7 @@ def create_buyer(buyer: BuyerRequest):
             "name": buyer.name,
             "ssn": buyer.ssn,
             "email": buyer.email,
-            "phoneNumber": buyer.phone_number
+            "phoneNumber": buyer.phoneNumber
         }
         data["buyers"].append(new_buyer)
         f.seek(0)

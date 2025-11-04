@@ -9,12 +9,13 @@ app = FastAPI(title="InventoryService")
 
 INVENTORY_FILE = Path("/app/inventory_data/inventory.json")
 RABBITMQ_HOST = "rabbitmq"
+EXCHANGE = "events"
 PAYMENT_SUCCESS_QUEUE = "payment_success"
 PAYMENT_FAILURE_QUEUE = "payment_failure"
 
 class ProductRequest(BaseModel):
-    merchant_id: int
-    product_name: str
+    merchantId: int
+    productName: str
     price: float
     quantity: int
 
@@ -35,8 +36,8 @@ def create_product(product: ProductRequest):
         new_id = len(data["products"]) + 1
         new_product = {
             "id": new_id,
-            "merchantId": product.merchant_id,
-            "productName": product.product_name,
+            "merchantId": product.merchantId,
+            "productName": product.productName,
             "price": product.price,
             "quantity": product.quantity,
             "reserved": 0
@@ -101,18 +102,25 @@ def update_inventory_on_failure(event):
 def consume_events():
     connection = pika.BlockingConnection(pika.ConnectionParameters(RABBITMQ_HOST))
     channel = connection.channel()
-    channel.queue_declare(queue=PAYMENT_SUCCESS_QUEUE)
-    channel.queue_declare(queue=PAYMENT_FAILURE_QUEUE)
+
+    channel.exchange_declare(exchange=EXCHANGE, exchange_type="topic", durable=True)
+
+    queue_name = "inventory.q"
+    channel.queue_declare(queue=queue_name, durable=True)
+
+    channel.queue_bind(queue=queue_name, exchange=EXCHANGE, routing_key="payment.success")
+    channel.queue_bind(queue=queue_name, exchange=EXCHANGE, routing_key="payment.failed")
 
     def callback(ch, method, properties, body):
         event = json.loads(body)
-        if method.routing_key == PAYMENT_SUCCESS_QUEUE:
+        if method.routing_key == "payment.success":
             update_inventory_on_success(event)
-        elif method.routing_key == PAYMENT_FAILURE_QUEUE:
+        elif method.routing_key == "payment.failed":
             update_inventory_on_failure(event)
+        
+        ch.basic_ack(method.delivery_tag)
 
-    channel.basic_consume(queue=PAYMENT_SUCCESS_QUEUE, on_message_callback=callback, auto_ack=True)
-    channel.basic_consume(queue=PAYMENT_FAILURE_QUEUE, on_message_callback=callback, auto_ack=True)
+    channel.basic_consume(queue=queue_name, on_message_callback=callback)
     print("InventoryService listening for payment events...")
     channel.start_consuming()
 
